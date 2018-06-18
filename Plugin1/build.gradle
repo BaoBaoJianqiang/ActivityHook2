@@ -1,0 +1,46 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.3"
+
+    defaultConfig {
+        applicationId "jianqiang.com.plugin1"
+        minSdkVersion 21
+        targetSdkVersion 25
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            def file = output.outputFile
+            output.outputFile = new File(file.parent,
+                    "plugin1.apk")
+
+            println("$buildDir/outputs/apk/")
+            println("$rootDir/HostApp/src/main/assets")
+
+            copy {
+                from "$buildDir/outputs/apk/plugin1.apk"
+                into "$rootDir/HostApp/src/main/assets"
+            }
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    testCompile 'junit:junit:4.12'
+
+    compile 'com.android.support:appcompat-v7:25.2.0'
+
+    //compile project(':mypluginlibrary')
+    provided files("lib/mypluginlibrary.jar")
+}
