@@ -17,22 +17,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-
-    applicationVariants.all { variant ->
-        variant.outputs.each { output ->
-            def file = output.outputFile
-            output.outputFile = new File(file.parent,
-                    "plugin1.apk")
-
-            println("$buildDir/outputs/apk/")
-            println("$rootDir/HostApp/src/main/assets")
-
-            copy {
-                from "$buildDir/outputs/apk/plugin1.apk"
-                into "$rootDir/HostApp/src/main/assets"
-            }
-        }
-    }
 }
 
 dependencies {
@@ -43,4 +27,21 @@ dependencies {
 
     //compile project(':mypluginlibrary')
     provided files("lib/mypluginlibrary.jar")
+}
+
+assemble.doLast {
+    android.applicationVariants.all { variant ->
+        // Copy Release artifact to HostApp's assets and rename
+        if (variant.name == "release") {
+            variant.outputs.each { output ->
+                File originFile = output.outputFile
+                println originFile.absolutePath
+                copy {
+                    from originFile
+                    into "$rootDir/HostApp/src/main/assets"
+                    rename(originFile.name, "plugin1.apk")
+                }
+            }
+        }
+    }
 }
