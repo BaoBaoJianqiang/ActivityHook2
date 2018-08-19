@@ -3,7 +3,11 @@ package jianqiang.com.activityhook1.classloder_hook;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 import dalvik.system.DexClassLoader;
 import dalvik.system.DexFile;
@@ -37,12 +41,17 @@ public final class BaseDexClassLoaderHookHelper {
         // 创建一个数组, 用来替换原始的数组
         Object[] newElements = (Object[]) Array.newInstance(elementClass, dexElements.length + 1);
 
-        // 构造插件Element(File file, boolean isDirectory, File zip, DexFile dexFile) 这个构造函数
-        Class[] p1 = {File.class, boolean.class, File.class, DexFile.class};
-        Object[] v1 = {apkFile, false, apkFile, DexFile.loadDex(apkFile.getCanonicalPath(), optDexFile.getAbsolutePath(), 0)};
-        Object o = RefInvoke.createObject(elementClass, p1, v1);
 
-        Object[] toAddElementArray = new Object[] { o };
+        List<File> legalFiles = new ArrayList<>();
+        legalFiles.add(apkFile);
+
+        List<IOException> suppressedExceptions = new ArrayList<IOException>();
+
+        Class[] p1 = {List.class, File.class, List.class, ClassLoader.class};
+        Object[] v1 = {legalFiles, optDexFile, suppressedExceptions, cl};
+        Object[] toAddElementArray = (Object[]) RefInvoke.invokeStaticMethod("dalvik.system.DexPathList", "makeDexElements", p1, v1);
+
+
         // 把原始的elements复制进去
         System.arraycopy(dexElements, 0, newElements, 0, dexElements.length);
         // 插件的那个element复制进去
